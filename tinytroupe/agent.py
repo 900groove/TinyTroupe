@@ -283,11 +283,18 @@ class TinyPerson(JsonSerializableRegistry):
         self.current_messages += self.retrieve_recent_memories()
 
         # add a final user message, which is neither stimuli or action, to instigate the agent to act properly
+        # self.current_messages.append({"role": "user", 
+        #                               "content": "Now you **must** generate a sequence of actions following your interaction directives, " +\
+        #                                          "and complying with **all** instructions and contraints related to the action you use." +\
+        #                                          "DO NOT repeat the exact same action more than once in a row!" +\
+        #                                          "These actions **MUST** be rendered following the JSON specification perfectly, including all required keys (even if their value is empty), **ALWAYS**."
+        #                              })
         self.current_messages.append({"role": "user", 
-                                      "content": "Now you **must** generate a sequence of actions following your interaction directives, " +\
-                                                 "and complying with **all** instructions and contraints related to the action you use." +\
-                                                 "DO NOT repeat the exact same action more than once in a row!" +\
-                                                 "These actions **MUST** be rendered following the JSON specification perfectly, including all required keys (even if their value is empty), **ALWAYS**."
+                                      "content": "あなたは**必ず**インタラクション指令に従ったアクションのシーケンスを生成し、" +\
+                                                 "使用するアクションに関連する**すべての**指示や制約を遵守しなければなりません。" +\
+                                                 "同じアクションを連続して繰り返さないでください！" +\
+                                                 "これらのアクションは**必ず**JSONフォーマットに従ってレンダリングされ、すべての必要なキー " +\
+                                                 "（その値が空であっても）を含める必要があります、**常に**。"
                                      })
 
     def get(self, key):
@@ -1803,7 +1810,7 @@ class EpisodicMemory(TinyMemory):
     Subclasses of this class can be used to provide different memory implementations.
     """
 
-    MEMORY_BLOCK_OMISSION_INFO = {'role': 'assistant', 'content': "Info: there were other messages here, but they were omitted for brevity.", 'simulation_timestamp': None}
+    MEMORY_BLOCK_OMISSION_INFO = {'role': 'assistant', 'content': "Info: ここには他にもメッセージがあったが、簡潔にするために省略した", 'simulation_timestamp': None}
 
     def __init__(
         self, fixed_prefix_length: int = 100, lookback_length: int = 100
