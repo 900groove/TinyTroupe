@@ -290,10 +290,10 @@ class TinyPerson(JsonSerializableRegistry):
         #                                          "These actions **MUST** be rendered following the JSON specification perfectly, including all required keys (even if their value is empty), **ALWAYS**."
         #                              })
         self.current_messages.append({"role": "user", 
-                                      "content": "あなたは**必ず**インタラクション指令に従ったアクションのシーケンスを生成し、" +\
-                                                 "使用するアクションに関連する**すべての**指示や制約を遵守しなければなりません。" +\
+                                      "content": "これからあなたはインタラクション指令に従ったアクションのシーケンスを生成**しなければいけません**。" +\
+                                                 "使用するアクションに関連する**すべての**指示や制約を遵守しなければならず、" +\
                                                  "同じアクションを連続して繰り返さないでください！" +\
-                                                 "これらのアクションは**必ず**JSONフォーマットに従ってレンダリングされ、すべての必要なキー " +\
+                                                 "これらのアクションは、JSON仕様に従ってレンダリングされ**なければならない**。、すべての必要なキー " +\
                                                  "（その値が空であっても）を含める必要があります、**常に**。"
                                      })
 
