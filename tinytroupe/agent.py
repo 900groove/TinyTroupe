@@ -787,7 +787,7 @@ class TinyPerson(JsonSerializableRegistry):
         self.reset_prompt()
 
         messages = [
-            {"role": msg["role"], "content": json.dumps(msg["content"])}
+            {"role": msg["role"], "content": json.dumps(msg["content"], ensure_ascii=False)}
             for msg in self.current_messages
         ]
 
@@ -795,7 +795,8 @@ class TinyPerson(JsonSerializableRegistry):
         logger.debug(f"[{self.name}] Last interaction: {messages[-1]}")
 
         next_message = openai_utils.client().send_message(messages, response_format=CognitiveActionModel)
-
+        logger.debug(f"[{self.name}] Current message: {self.current_messages}")
+        logger.debug(f"[{self.name}] Send message: {messages}")
         logger.debug(f"[{self.name}] Received message: {next_message}")
 
         return next_message["role"], utils.extract_json(next_message["content"])
