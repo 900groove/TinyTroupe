@@ -1023,24 +1023,36 @@ class TinyPerson(JsonSerializableRegistry):
             str: The mini-biography.
         """
 
-        base_biography = f"{self.name} is a {self._configuration['age']} year old {self._configuration['occupation']}, {self._configuration['nationality']}, currently living in {self._configuration['country_of_residence']}."
+        # base_biography = f"{self.name} is a {self._configuration['age']} year old {self._configuration['occupation']}, {self._configuration['nationality']}, currently living in {self._configuration['country_of_residence']}."
+        base_biography = f"{self.name} は {self._configuration['age']} 歳の {self._configuration['occupation']}, {self._configuration['nationality']}人で、現在は {self._configuration['country_of_residence']} に住んでいます。"
 
         if self._extended_agent_summary is None and extended:
             logger.debug(f"Generating extended agent summary for {self.name}.")
+            # self._extended_agent_summary = openai_utils.LLMRequest(
+            #                                     system_prompt="""
+            #                                     You are given a short biography of an agent, as well as a detailed specification of his or her other characteristics
+            #                                     You must then produce a short paragraph (3 or 4 sentences) that **complements** the short biography, adding details about
+            #                                     personality, interests, opinions, skills, etc. Do not repeat the information already given in the short biography.
+            #                                     repeating the information already given. The paragraph should be coherent, consistent and comprehensive. All information
+            #                                     must be grounded on the specification, **do not** create anything new.
+            #                                     """, 
+
+            #                                     user_prompt=f"""
+            #                                     **Short biography:** {base_biography}
+
+            #                                     **Detailed specification:** {self._configuration}
+            #                                     """).call()
             self._extended_agent_summary = openai_utils.LLMRequest(
-                                                system_prompt="""
-                                                You are given a short biography of an agent, as well as a detailed specification of his or her other characteristics
-                                                You must then produce a short paragraph (3 or 4 sentences) that **complements** the short biography, adding details about
-                                                personality, interests, opinions, skills, etc. Do not repeat the information already given in the short biography.
-                                                repeating the information already given. The paragraph should be coherent, consistent and comprehensive. All information
-                                                must be grounded on the specification, **do not** create anything new.
-                                                """, 
+                                                    system_prompt = """
+                                                    あなたは、エージェントの短い伝記と、彼または彼女の他の特性の詳細な仕様を与えられます。
+                                                    その後、短い伝記を**補完する**短い段落（3〜4文）を作成する必要があります。性格、興味、意見、スキルなどの詳細を追加します。短い伝記ですでに与えられている情報を繰り返さないでください。すでに与えられている情報を繰り返さないこと。段落は、首尾一貫しており、矛盾がなく、包括的である必要があります。すべての情報は仕様に基づいていなければならず、新しいものを**作成しないでください**。
+                                                    """,
 
-                                                user_prompt=f"""
-                                                **Short biography:** {base_biography}
+                                                    user_prompt = f"""
+                                                    **短い伝記：** {base_biography}
 
-                                                **Detailed specification:** {self._configuration}
-                                                """).call()
+                                                    **詳細な仕様：** {self._configuration}
+                                                    """).call()
 
         if extended:
             biography = f"{base_biography} {self._extended_agent_summary}"
