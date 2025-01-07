@@ -283,11 +283,18 @@ class TinyPerson(JsonSerializableRegistry):
         self.current_messages += self.retrieve_recent_memories()
 
         # add a final user message, which is neither stimuli or action, to instigate the agent to act properly
+        # self.current_messages.append({"role": "user", 
+        #                               "content": "Now you **must** generate a sequence of actions following your interaction directives, " +\
+        #                                          "and complying with **all** instructions and contraints related to the action you use." +\
+        #                                          "DO NOT repeat the exact same action more than once in a row!" +\
+        #                                          "These actions **MUST** be rendered following the JSON specification perfectly, including all required keys (even if their value is empty), **ALWAYS**."
+        #                              })
         self.current_messages.append({"role": "user", 
-                                      "content": "Now you **must** generate a sequence of actions following your interaction directives, " +\
-                                                 "and complying with **all** instructions and contraints related to the action you use." +\
-                                                 "DO NOT repeat the exact same action more than once in a row!" +\
-                                                 "These actions **MUST** be rendered following the JSON specification perfectly, including all required keys (even if their value is empty), **ALWAYS**."
+                                      "content": "これからあなたはインタラクション指令に従ったアクションのシーケンスを生成**しなければいけません**。" +\
+                                                 "使用するアクションに関連する**すべての**指示や制約を遵守しなければならず、" +\
+                                                 "同じアクションを連続して繰り返さないでください！" +\
+                                                 "これらのアクションは、JSON仕様に従ってレンダリングされ**なければならない**。、すべての必要なキー " +\
+                                                 "（その値が空であっても）を含める必要があります、**常に**。"
                                      })
 
     def get(self, key):
@@ -780,7 +787,7 @@ class TinyPerson(JsonSerializableRegistry):
         self.reset_prompt()
 
         messages = [
-            {"role": msg["role"], "content": json.dumps(msg["content"])}
+            {"role": msg["role"], "content": json.dumps(msg["content"], ensure_ascii=False)}
             for msg in self.current_messages
         ]
 
@@ -788,7 +795,8 @@ class TinyPerson(JsonSerializableRegistry):
         logger.debug(f"[{self.name}] Last interaction: {messages[-1]}")
 
         next_message = openai_utils.client().send_message(messages, response_format=CognitiveActionModel)
-
+        logger.debug(f"[{self.name}] Current message: {self.current_messages}")
+        logger.debug(f"[{self.name}] Send message: {messages}")
         logger.debug(f"[{self.name}] Received message: {next_message}")
 
         return next_message["role"], utils.extract_json(next_message["content"])
@@ -1015,24 +1023,36 @@ class TinyPerson(JsonSerializableRegistry):
             str: The mini-biography.
         """
 
-        base_biography = f"{self.name} is a {self._configuration['age']} year old {self._configuration['occupation']}, {self._configuration['nationality']}, currently living in {self._configuration['country_of_residence']}."
+        # base_biography = f"{self.name} is a {self._configuration['age']} year old {self._configuration['occupation']}, {self._configuration['nationality']}, currently living in {self._configuration['country_of_residence']}."
+        base_biography = f"{self.name} は {self._configuration['age']} 歳の {self._configuration['occupation']}, {self._configuration['nationality']}人で、現在は {self._configuration['country_of_residence']} に住んでいます。"
 
         if self._extended_agent_summary is None and extended:
             logger.debug(f"Generating extended agent summary for {self.name}.")
+            # self._extended_agent_summary = openai_utils.LLMRequest(
+            #                                     system_prompt="""
+            #                                     You are given a short biography of an agent, as well as a detailed specification of his or her other characteristics
+            #                                     You must then produce a short paragraph (3 or 4 sentences) that **complements** the short biography, adding details about
+            #                                     personality, interests, opinions, skills, etc. Do not repeat the information already given in the short biography.
+            #                                     repeating the information already given. The paragraph should be coherent, consistent and comprehensive. All information
+            #                                     must be grounded on the specification, **do not** create anything new.
+            #                                     """, 
+
+            #                                     user_prompt=f"""
+            #                                     **Short biography:** {base_biography}
+
+            #                                     **Detailed specification:** {self._configuration}
+            #                                     """).call()
             self._extended_agent_summary = openai_utils.LLMRequest(
-                                                system_prompt="""
-                                                You are given a short biography of an agent, as well as a detailed specification of his or her other characteristics
-                                                You must then produce a short paragraph (3 or 4 sentences) that **complements** the short biography, adding details about
-                                                personality, interests, opinions, skills, etc. Do not repeat the information already given in the short biography.
-                                                repeating the information already given. The paragraph should be coherent, consistent and comprehensive. All information
-                                                must be grounded on the specification, **do not** create anything new.
-                                                """, 
+                                                    system_prompt = """
+                                                    あなたは、エージェントの短い伝記と、彼または彼女の他の特性の詳細な仕様を与えられます。
+                                                    その後、短い伝記を**補完する**短い段落（3〜4文）を作成する必要があります。性格、興味、意見、スキルなどの詳細を追加します。短い伝記ですでに与えられている情報を繰り返さないでください。すでに与えられている情報を繰り返さないこと。段落は、首尾一貫しており、矛盾がなく、包括的である必要があります。すべての情報は仕様に基づいていなければならず、新しいものを**作成しないでください**。
+                                                    """,
 
-                                                user_prompt=f"""
-                                                **Short biography:** {base_biography}
+                                                    user_prompt = f"""
+                                                    **短い伝記：** {base_biography}
 
-                                                **Detailed specification:** {self._configuration}
-                                                """).call()
+                                                    **詳細な仕様：** {self._configuration}
+                                                    """).call()
 
         if extended:
             biography = f"{base_biography} {self._extended_agent_summary}"
@@ -1803,7 +1823,7 @@ class EpisodicMemory(TinyMemory):
     Subclasses of this class can be used to provide different memory implementations.
     """
 
-    MEMORY_BLOCK_OMISSION_INFO = {'role': 'assistant', 'content': "Info: there were other messages here, but they were omitted for brevity.", 'simulation_timestamp': None}
+    MEMORY_BLOCK_OMISSION_INFO = {'role': 'assistant', 'content': "Info: ここには他にもメッセージがあったが、簡潔にするために省略した", 'simulation_timestamp': None}
 
     def __init__(
         self, fixed_prefix_length: int = 100, lookback_length: int = 100

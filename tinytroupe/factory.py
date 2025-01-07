@@ -124,7 +124,7 @@ class TinyPersonFactory(TinyFactory):
         messages = []
         messages.append({"role": "system", "content": system_prompt})
 
-        user_prompt = chevron.render("Please, create {{number_of_factories}} person descriptions based on the following broad context: {{context}}", {
+        user_prompt = chevron.render("以下の大まかなコンテキストに基づいて、{{number_of_factories}} 人分の人物描写を作成してください。: {{context}}", {
             "number_of_factories": number_of_factories,
             "context": generic_context_text
         })
@@ -174,13 +174,13 @@ class TinyPersonFactory(TinyFactory):
         def aux_generate(attempt):
 
             messages = []
-            messages += [{"role": "system", "content": "You are a system that generates specifications for realistic simulations of people. You follow the generation rules and constraints carefully."},
+            messages += [{"role": "system", "content": "あなたは、人々の現実的なシミュレーションのための仕様を生成するシステムです。あなたは生成ルールと制約を注意深く守ります。"},
                         {"role": "user", "content": prompt}]
             
             if attempt > 1:
                 # we failed once already due to repetition, so we try to further reinforce the message to avoid repetition.
-                messages.append({"role": "user", "content": "IMPORTANT: Please ensure you **do not** generate the same name again. Agent names **must** be unique."+ \
-                                                            "Read the list of already generated names to avoid repetition. If necessary, generate a longer name to ensure it is new."})
+                messages.append({"role": "user", "content": "重要：名前の重複が**絶対にない**ようにしてください。エージェント名は**必ず**一意である必要があります。\
+重複を避けるために、すでに生成された名前のリストを読んでください。必要に応じて、新しい名前になるように、より長い名前を生成してください。"})
 
             # due to a technicality, we need to call an auxiliary method to be able to use the transactional decorator.
             message = self._aux_model_call(messages=messages, temperature=temperature)
@@ -188,7 +188,7 @@ class TinyPersonFactory(TinyFactory):
             if message is not None:
                 result = utils.extract_json(message["content"])
 
-                logger.debug(f"At attempt {attempt}, generated person parameters:\n{json.dumps(result, indent=4, sort_keys=True)}")
+                logger.debug(f"At attempt {attempt}, generated person parameters:\n{json.dumps(result, indent=4, sort_keys=True, ensure_ascii=False)}")
 
                 # only accept the generated spec if the name is not already in the generated names, because they must be unique.
                 if result["name"].lower() not in self.generated_names:
